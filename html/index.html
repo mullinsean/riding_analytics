@@ -19,10 +19,78 @@
     </script>
   </head>
   <body onload="initialize()">
-    <div id="map_canvas" style="width:79%; height:100%; float:left"></div>
-    <div id="content_window" style="width:19%; height:100%; float:left">
-		<input type="button" value="TEST ME!" onclick="run_test();">
-	
+    <div id="map_canvas" style="width:80%; height:100%; float:left"></div>
+    <div id="content_window" style="width:20%; height:100%; float:left">
+		<b>Riding:</b>  <select name="Riding">
+		  <option value="35096" selected>Trinity-Spadina</option>
+		  <option value = "Renfrew-Nipissing-Pembroke" disabled>Renfrew-Nipissing-Pembroke</option>
+		</select>
+		<br><BR>
+		<BR>
+		
+		<b>Map Options:</b><BR>
+		<BR>
+		
+		<input type="radio" name="map_type" value="party" checked="checked" onClick="change_map_state('party');">Party Vote Share<BR>
+		<input type="radio" name="map_type" value="turnout" onClick="change_map_state('turnout');">Voter Turnout<BR>
+		<input type="radio" name="map_type" value="empty_frame" onClick="change_map_state('empty_frame');">Poll Boundaries<BR>
+		<BR>
+		<BR>
+		
+		<b>Election Results:</b><BR>
+		<BR>
+		<U><B>Ontario:</b></U><BR>
+		<input type="radio" name="election_year" value="2011_ON" checked="checked">2011 Provincial<BR>
+		<input type="radio" name="election_year" value="2007_ON" disabled><strike>2007 Provincial</strike><BR>
+		<input type="radio" name="election_year" value="2003_ON" disabled><strike>2003 Provincial</strike><BR>
+		<BR>
+		<U><B>Federal:</B></U><BR>
+		<input type="radio" name="election_year" value="2011_FED" disabled><strike>2011 Federal</strike><BR>
+		<input type="radio" name="election_year" value="2008_FED" disabled><strike>2008 Federal</strike><BR>
+		<input type="radio" name="election_year" value="2006_FED" disabled><strike>2006 Federal</strike><BR>		
+		<input type="radio" name="election_year" value="2004_FED" disabled><strike>2004 Federal</strike><BR>	
+
+		<BR>
+		<BR>
+		
+		<B>Riding Summary:</B><BR><BR>
+		
+		<TABLE>
+		  <TR>
+		    <TH><B>Candidate</B></TH>
+			<TH><B>Votes</B></TH>
+			<TH><B>%</B></TH>
+		  </TR>
+		  <TR>
+		    <TD>Marchese</TD>
+			<TD>19,806</TD>
+			<TD>42.4%</TD>
+		  </TR>
+		  <TR>
+		    <TD>Thomson</TD>
+			<TD>18,731</TD>
+			<TD>39.9%</TD>
+		  </TR>
+		  <TR>
+		    <TD>Yen</TD>
+			<TD>5,429</TD>
+			<TD>11.7%</TD>
+		  </TR>
+		  <TR>
+		    <TD>Grant</TD>
+			<TD>2,415</TD>
+			<TD>5.7%</TD>
+		  </TR>
+		</TABLE>
+		
+		<BR>
+		<B>Voter Turnout: </B>42.8%<BR> 
+		<B>Total Valid Votes: </B> 46,906<BR>
+
+		   
+		
+		
+
 	</div>
   </body>
 </html>
