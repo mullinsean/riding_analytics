@@ -1,33 +1,28 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
-    <style type="text/css">
-      html { height: 100% }
-      body { height: 100%; margin: 0; padding: 0 }
-      #map_canvas { height: 100% }
-    </style>
+    <link rel="stylesheet" type="text/css" href="main.css">
     <script type="text/javascript"
       src="http://maps.googleapis.com/maps/api/js?key=AIzaSyADcN9Ucxg-K6mX0dGy3gALHAGU6xHwK1Q&sensor=false">
     </script>
     <script type="text/javascript" src="http://individual.utoronto.ca/seanmullin/js/poll_maps.js">
 	  
 	// I'm going to add a funky comment here.  Testing ver 2
-	
  
 			
     </script>
   </head>
   <body onload="initialize()">
-    <div id="map_canvas" style="width:80%; height:100%; float:left"></div>
-    <div id="content_window" style="width:20%; height:100%; float:left">
+      <div id="header">
 		<b>Riding:</b>  <select name="Riding">
 		  <option value="35096" selected>Trinity-Spadina</option>
 		  <option value = "Renfrew-Nipissing-Pembroke" disabled>Renfrew-Nipissing-Pembroke</option>
 		</select>
-		<br><BR>
-		<BR>
-		
+	  </div>
+	
+	  <div id="map_container">
+		<div id="map_canvas"></div>
+		<div id="side_nav">
 		<b>Map Options:</b><BR>
 		<BR>
 		
@@ -86,11 +81,13 @@
 		<BR>
 		<B>Voter Turnout: </B>42.8%<BR> 
 		<B>Total Valid Votes: </B> 46,906<BR>
-
-		   
-		
-		
-
+	
+		</div>
+	</div>
+	
+	<div id="footer">
+	  Copyright 2013
+	
 	</div>
   </body>
 </html>
