@@ -5,7 +5,6 @@ var map_state = {
 }
  
  function initialize() {
-    alert("Hello1");
 	var mapOptions = {
 	  center: new google.maps.LatLng(43.65, -79.4),
 	  zoom: 13,
