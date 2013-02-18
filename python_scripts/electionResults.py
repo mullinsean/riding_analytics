@@ -78,8 +78,9 @@ for entry in candidateList:
     ridings[entry['RIDING_ID']]['results'].update( { entry['PARTY'] : { 'votes' : entry['VOTES'], 
                                                                         'candidateLastName' : entry['CANDIDATE'].split()[-1],
                                                                         'candidateFirstNames' : " ".join( entry['CANDIDATE'].split()[:-1]) }})
-
-
+                                                                        
+                                                                        
+                                                                        
 # Let's crunch some results:
 #
 # 1) Winners in each riding
