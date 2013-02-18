@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="main.css">
+    <script type="text/javascript"
+      src="http://maps.googleapis.com/maps/api/js?key=AIzaSyADcN9Ucxg-K6mX0dGy3gALHAGU6xHwK1Q&sensor=false">
+    </script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.js" type="text/javascript"></script>
+    <script src="http://individual.utoronto.ca/seanmullin/js/electiondata.js" type="text/javascript"></script>
+    <script>
+	
+	
+var riding;
+
+var toggle = 0;
+
+var mapData, ridingData;
+
+
+$(document).ready(function(){
+	$("button").click(function() {
+		
+          if( toggle == 0 ) {		
+		
+		    $.getJSON('TS.json', function(data) {
+              mapData = data;
+            });
+            
+
+            $.getJSON('https://frogcakeskierscuba.s3.amazonaws.com/ontario2011/96_Ont2011.json', function(d) {
+              ridingData = d;
+            });
+		    toggle++;
+  		  }
+          else if( toggle == 1 ) {
+            toggle++;
+            riding = new ElectionData.Riding( mapData, ridingData, map );
+            riding.showPolls();
+
+                    
+          }
+          
+		  else
+		  {
+		    //riding.hidePoll( toggle );
+			toggle++;
+		  
+		  for( var i=0; i< riding.pollList.length; i++ )
+		  {
+		    if( riding.pollList[i].getPollNum() == 144 ) {
+			  riding.pollList[i].setFillColor( "#0000FF" );
+              console.log("--- " + i );
+			}
+   		  }
+		  
+		  
+			  
+		  //$("#words").append("Loaded " + data.num_polls + " polls.");
+		  
+		  }
+		 		  
+  
+	   
+	});
+	
+	
+});
+
+
+var map;
+
+	  
+function initialize() {
+	var mapOptions = {
+	  center: new google.maps.LatLng(43.639552217043267,-79.378504391148113),
+	  zoom: 12,
+	  mapTypeId: google.maps.MapTypeId.ROADMAP
+	};
+	map = new google.maps.Map(document.getElementById("map_canvas"),
+		mapOptions);
+		
+/*  var poll;
+
+  var polyCoords = [
+    new google.maps.LatLng(43.639552217043267,-79.378504391148113),
+	new google.maps.LatLng(43.639455847325976,-79.378444167712289),
+	new google.maps.LatLng( 43.639419904920494,-79.378546133726203),
+	new google.maps.LatLng( 43.639238311779906,-79.378424631862302),
+	new google.maps.LatLng( 43.638990319272374,-79.379126985695237),
+	new google.maps.LatLng( 43.638958993461536,-79.37921578820648),
+	new google.maps.LatLng( 43.639733997034767,-79.379744747766551),
+	new google.maps.LatLng( 43.639777975807569,-79.379792098692974),
+	new google.maps.LatLng( 43.639722576333774,-79.37992885509054),
+	new google.maps.LatLng( 43.639877137417116,-79.380036308338589),
+	new google.maps.LatLng( 43.639910407745361,-79.379934767144647),
+	new google.maps.LatLng( 43.63995834658202,-79.379794078763595),
+	new google.maps.LatLng( 43.63966406228564,-79.379627738995126),
+	new google.maps.LatLng( 43.639482742719984,-79.379354614279222),
+	new google.maps.LatLng( 43.639463707582721,-79.379068471716607),
+	new google.maps.LatLng( 43.639496512121298,-79.378723804289649),
+	new google.maps.LatLng( 43.639552217043267,-79.378504391148113)
+  ];
+  
+  poll = new google.maps.Polygon({
+    paths: polyCoords,
+    strokeColor: "#FF0000",
+    strokeOpacity: 0.8,
+    strokeWeight: 2,
+    fillColor: "#FF0000",
+    fillOpacity: 0.35
+   }); 
+
+  poll.setMap(map);*/
+		
+	/* tsLayer = new google.maps.FusionTablesLayer({
+	  query: {
+		select: 'geometry',
+		from: '1_2T1bHEY8HPujn9Se_YpPXMuwIs_kmC1EF7ly_E'
+	  },
+	  styles: [{
+		polygonOptions: {
+		  fillColor: '#FF0000',
+		  fillOpacity: 0.5
+		}
+	  },  {
+		where: 'NDP_WIN > 0',
+		polygonOptions : {
+		  fillColor: '#ff9900'
+		}
+	  }]
+	});
+	tsLayer.setMap(map);*/
+	
+	//var ctaLayer = new google.maps.KmlLayer('http://individual.utoronto.ca/seanmullin/35074.kml');
+	//ctaLayer.setMap(map);
+					
+  }
+ 
+			
+    </script>
+  </head>
+  <body onload="initialize()">
+     <div id="header">
+		<b>Riding:</b>  <select name="Riding">
+		  <option value="35096" selected>Trinity-Spadina</option>
+		  <option value = "Renfrew-Nipissing-Pembroke" disabled>Renfrew-Nipissing-Pembroke</option>
+		</select>
+	  </div>
+	
+	  <div id="map_container">
+		<div id="map_canvas"></div>
+		<div id="side_nav">
+
+		
+			<button type="button1">Load Some Copy!</button>
+			<button type="button2">Show on Map</button>
+			<br /><br />
+			<div id="words">First, let's start.<br><br></div>
+			
+			
+			
+		</div>
+	</div>
+	
+	<div id="footer">
+	  Copyright 2013
+	</div>
+
+    </body>
+</html>
