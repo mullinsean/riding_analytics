@@ -15,19 +15,25 @@ def csvToDict( csvData ):
     hD.append( headerRow[i] )
     
   dict = []
-  entry = {}
+
    
   for n in range( 1, len( csvData )):
     line = csvData[n]   
+    entry = {}
     
-    if( line[5][:3] == "..." or line[0][:5] == "TOTAL" ) :
+    if( line[5][:3] == "..." ) :
       entry['noPoll'] = True
-    else :
+      entry['noPollMessage'] = line[5]
+      entry['POLL_NUMBER'] = line[2]
+      dict.append( entry.copy() )
+      print "Poll number", line[2], "was not held."
+    elif line[0][:5] != "TOTAL" :
       entry['noPoll'] = False
-    
-    for i in range( 0, len( line )):
-      entry[hD[i]] = line[i]
-    dict.append( entry.copy() )
+      entry['noPollMessage'] = ""
+      
+      for i in range( 0, len( line )):
+        entry[hD[i]] = line[i]
+      dict.append( entry.copy() )
     
   return dict
 
@@ -65,6 +71,7 @@ def parsePollData( poll, pollRecord, candidates, addToRecord=False, noPollData=F
    
     if( noPollData == True ):
       pollRecord['noPoll'] = True
+      pollRecord['noPollMessage'] = poll['noPollMessage']
       return pollRecord
    
     if( addToRecord == True):    
@@ -85,7 +92,8 @@ def parsePollData( poll, pollRecord, candidates, addToRecord=False, noPollData=F
           
         
     else :    
-      pollRecord.update( { "noPoll" : poll['noPoll'] })  
+      pollRecord.update( { "noPoll" : poll['noPoll'] }) 
+      pollRecord.update( { "noPollMessage" : poll['noPollMessage'] })      
    
       pollRecord.update( { "rural" : poll['RURAL_INDICATOR'] })
       pollRecord.update( { "placeName" : poll['PLACE_NAME'] })
@@ -144,8 +152,8 @@ def calculatePollData( poll, candidates ) :
     poll.update( { "percentTurnout" : round( float(poll['validVotes']) 
                                                         * 100 / float(poll['electors']), 2) })
                                                         
-  if( poll['noPoll'] ) :
-    pprint( poll)
+#  if( poll['noPoll'] ) :
+#    pprint( poll)
     
   return poll
     
@@ -198,7 +206,7 @@ for poll in pollResults:
   while( pollNumber[:1] == "0" ):
     pollNumber = pollNumber[1:]
       
-  print pollNumber
+  #print pollNumber
   
   if(( pollNumber in ridingData['polls'].keys()) == False ):
     ridingData['polls'].update( { pollNumber : {} } )
@@ -215,8 +223,13 @@ for poll in pollResults:
 
 for poll in ridingData['polls'] :
   ridingData['polls'][poll] = calculatePollData( ridingData['polls'][poll], candidates )
+  
+## Finally, let's drop the extraneous "results" object
 
-                                                           
+for poll in ridingData['polls'] :
+  if( ridingData['polls'][poll]['noPoll'] == False ):
+    del ridingData['polls'][poll]['results'] 
+                                                          
 
 with open('96_Ont2011.json', 'w') as f:
   json.dump(ridingData, f, ensure_ascii = False)

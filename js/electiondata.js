@@ -10,16 +10,19 @@
   
   var partyGradients = 
   {
-    "ND" : ["#FBBF8B", "#FAAF6E", "#F99F51", "#F88F34", "#F88017", "#D97014", "#BA6011", "#9B500E"],
-    "PC" : ["#7F7FFF", "#5F5FFF", "#3F3FFF", "#1F1FFF", "#0000FF", "#0000CF", "#00009F", "#00006F"],
-    "L" :  ["#FF7F7F", "#FF5F5F", "#FF3F3F", "#FF1F1F", "#FF0000", "#CF0000", "#9F0000", "#6F0000"]
+    "ND" : ["#FFCF9F", "#FFBB77", "#FFA74F", "#FF9327", "#FF7F00"],
+    "PC" : ["#9F9FFF", "#7777FF", "#4F4FFF", "#2727FF", "#0000FF"],
+    "L" :  ["#FF9F9F", "#FF7777", "#FF4F4F", "#FF2727", "#FF0000"]
   };
+  
   
   var colorChooser = function( party, percentage )
   {
-    var gradients = [35, 40, 45, 50, 60, 70, 80];
+    var gradients = [35, 40, 50, 60];
+    
     var i;
-    var returnValue = "";
+   
+    // NOTE: Fix case where Green party or other candidate wins poll.
     
     if( party == "" ) {
       return "#777777";
@@ -46,24 +49,15 @@
   
    pollData.hasOwnProperty( "coords" ) ? this.coords = pollData.coords : this.coords = [];
    
-   if( pollResults == null || pollResults.noPoll == true ) {
-     this.noPoll = true;
-   } 
-   else {
-     this.noPoll = false;
-   }
-   
-   this.location = "";
-   
    this.gMapsObj = null;
    this.gPoly = null;
    this.infoWindowObj = null;
    
    this.pollResults = pollResults;
    
-   console.log( "Poll Number: " + this.pollNumber + " No Poll: " + this.noPoll );
+   console.log( "Poll Number: " + this.pollNumber + " No Poll: " + this.noPoll() );
      
-   if( this.noPoll == false ) {
+   if( this.noPoll() == false ) {
      var colour = colorChooser( this.pollResults.winner, this.pollResults.candidates[0].percentage );
    }
    else {
@@ -76,24 +70,17 @@
     strokeOpacity: 0.8,
     strokeWeight: 1,
     fillColor: colour,
-    fillOpacity: 1.0
+    fillOpacity: 0.6
    }; 
       
   };
-  
-/* ElectionData.Poll.prototype.init = function( pollData ) {
-     this.pollNumber = pollData["poll_number"];
-	 
-	 this.coords = pollData.coords;
-	 return this;
-  };*/
   
   ElectionData.Poll.prototype.initMap = function( map ) {
      this.gMapsObj = map;
 	 
 	 var i, j;
 	 for( i = 0; i < this.coords.length; i++ ) {
-         this.polyOpts.paths[i] = [];
+       this.polyOpts.paths[i] = [];
        for( j = 0; j < this.coords[i].length; j++ ) {
 	     this.polyOpts.paths[i].push( new google.maps.LatLng(this.coords[i][j][0], this.coords[i][j][1]));
        }
@@ -108,8 +95,6 @@
 	     
 		 var str = "Click from poll #" + poll.pollNumber + "<br>";
          
-         console.log( poll.pollResults.pollLocation );
-         
          for( i in poll.pollResults ) {
            if( poll.pollResults.hasOwnProperty( i ) ) {
              if( i == "placeName" || i == "electors" || i == "validVotes" || i == "pollLocation" || i == "percentTurnout" ) {
@@ -119,9 +104,14 @@
          }
          
          str += "<br><br><B>Results:</B><br>";
-       
-         for( i = 0; i < poll.pollResults.candidates.length; i++ ) {
-           str += poll.pollResults.candidates[i].party + ": " + poll.pollResults.candidates[i].votes + " (" + poll.pollResults.candidates[i].percentage + "%)<br>";
+         
+         if( !poll.noPoll() ) {
+           for( i = 0; i < poll.pollResults.candidates.length; i++ ) {
+             str += poll.pollResults.candidates[i].party + ": " + poll.pollResults.candidates[i].votes + " (" + poll.pollResults.candidates[i].percentage + "%)<br>";
+           }
+         }
+         else {
+           str += poll.pollResults.noPollMessage + "<br>";
          }
              
 		 
@@ -130,8 +120,8 @@
 		 infoWindowObj.open( poll.gMapsObj );
 		 
 		 //poll.setFillColor( "#0000FF" );
-		 
-	     console.log( "Click from poll #" + poll.pollNumber  ); 
+         
+         console.log( "Click from poll #" + poll.pollNumber  ); 
 	   });
 	 })( this );
 	 
@@ -142,16 +132,23 @@
      return this.pollNumber;
   }; 
   
+  ElectionData.Poll.prototype.noPoll = function() {
+    if( !this.hasOwnProperty( "pollResults" )) {
+      return true;
+    }
+    else {
+      return this.pollResults.noPoll;
+    }
+  };  
+  
   ElectionData.Poll.prototype.getWinner = function() {
-    if( !this.pollResults ) {
+    if( !this.hasOwnProperty( "pollResults" )) {
       return "";
     }
     else {
       return this.pollResults.winner;
     }
   };      
-    
-    
     
 
   ElectionData.Poll.prototype.setDisplayOptions = function( displayOptions ) {
@@ -234,13 +231,12 @@
    this.electionType = "provincial";
    this.ridingCoords = [];
    
-   this.pollList = [];
+   this.pollList = {};
    
    this.ridingResults = ridingResults;
    
    this.gMapsObj = map;
    this.gPoly = null;
-   //this.results = {};
    
    this.polyOpts = {
     paths: [],
@@ -255,13 +251,13 @@
    for( i = 0; i < this.numPolls; i++ ) {
      if( ridingResults.polls.hasOwnProperty( ridingData.polls[i].poll_number )) {
        console.log( "Adding: " + ridingData.polls[i].poll_number );
-       this.pollList[i] = new ElectionData.Poll(ridingData.polls[i], ridingResults.polls[ridingData.polls[i].poll_number] );
-	   this.pollList[i].initMap(this.gMapsObj);
+       this.pollList[ridingData.polls[i].poll_number] = new ElectionData.Poll(ridingData.polls[i], ridingResults.polls[ridingData.polls[i].poll_number] );
+	   this.pollList[ridingData.polls[i].poll_number].initMap(this.gMapsObj);
      }
      else {
        console.log( "No results data for: " + ridingData.polls[i].poll_number );
-       this.pollList[i] = new ElectionData.Poll(ridingData.polls[i], null );
-	   this.pollList[i].initMap(this.gMapsObj);            
+       this.pollList[ridingData.polls[i].poll_number] = new ElectionData.Poll(ridingData.polls[i], null );
+	   this.pollList[ridingData.polls[i].poll_number].initMap(this.gMapsObj);            
     }
    }
    return this;
@@ -270,7 +266,7 @@
   ElectionData.Riding.prototype.showPolls = function() {
   
     var i;
-    for( i = 0; i < this.numPolls; i++ ) {
+    for( i in this.pollList ) {
       this.pollList[i].show();
     }
 
@@ -280,7 +276,7 @@
   ElectionData.Riding.prototype.hidePolls = function() {
   
     var i;
-    for( i = 0; i < this.numPolls; i++ ) {
+    for( i in this.pollList ) {
       this.pollList[i].hide();
     }
 	
@@ -289,12 +285,8 @@
 
   ElectionData.Riding.prototype.showPoll = function( n ) {
   
-    var i;
-	
-	for( i = 0; i < this.numPolls; i++ ) {
-	  if( this.pollList[i].pollNumber == n ) {
-	    this.pollList[i].show();
-	  }
+    if( this.pollList.hasOwnProperty( n )) {
+      this.pollList[n].show();
     }
 	
     return this;
@@ -302,12 +294,8 @@
 
   ElectionData.Riding.prototype.hidePoll = function( n ) {
   
-    var i;
-	
-    for( i = 0; i < this.numPolls; i++ ) {
-	  if( this.pollList[i].pollNumber == n ) {
-	    this.pollList[i].hide();
-	  }
+    if( this.pollList.hasOwnProperty( n )) {
+      this.pollList[n].hide();
     }
 	
     return this;
