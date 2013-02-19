@@ -11,6 +11,7 @@
 	
 	
 var riding;
+var ridingID;
 
 var toggle = 0;
 
@@ -18,52 +19,45 @@ var mapData, ridingData;
 
 
 $(document).ready(function(){
-	$("button").click(function() {
+	$("#button1").click(function() {
 		
-          if( toggle == 0 ) {		
+        var ridingID;
+        var ridingNum;
+        
+        ridingID = $("#ridingID").val();
+        ridingNum = parseInt( ridingID );
+        if( ridingNum < 1 || ridingNum > 107 ) {
+          ridingNum = 96;
+        }
+        
+        var fileStr;
+        
+        if( toggle > 0 ) {
+          riding.closeMap();
+        }
+        
+        fileStr = "https://frogcakeskierscuba.s3.amazonaws.com/ontario2011/ridingMapData_" + ridingNum + ".json";
+        $.getJSON(fileStr, function(data) {
+          mapData = data;
+        });    
+
+        fileStr = "https://frogcakeskierscuba.s3.amazonaws.com/ontario2011/Ont2011_" + ridingNum + ".json";
+        $.getJSON(fileStr, function(d) {
+          ridingData = d;
+        });
+    });
+    
+    $("#button2").click(function() {
 		
-		    $.getJSON('TS.json', function(data) {
-              mapData = data;
-            });
-            
+        riding = new ElectionData.Riding( mapData, ridingData, map );
+        riding.zoomToFit();
+        riding.showBoundary();
+        riding.showPolls();
+        
+        toggle++;
 
-            $.getJSON('96_Ont2011.json', function(d) {
-              ridingData = d;
-            });
-		    toggle++;
-  		  }
-          else if( toggle == 1 ) {
-            toggle++;
-            riding = new ElectionData.Riding( mapData, ridingData, map );
-            riding.showPolls();
+    });
 
-                    
-          }
-          
-		  else
-		  {
-		    //riding.hidePoll( toggle );
-			toggle++;
-		  
-		  for( var i=0; i< riding.pollList.length; i++ )
-		  {
-		    if( riding.pollList[i].getPollNum() == 144 ) {
-			  riding.pollList[i].setFillColor( "#0000FF" );
-              console.log("--- " + i );
-			}
-   		  }
-		  
-		  
-			  
-		  //$("#words").append("Loaded " + data.num_polls + " polls.");
-		  
-		  }
-		 		  
-  
-	   
-	});
-	
-	
 });
 
 
@@ -142,8 +136,9 @@ function initialize() {
   <body onload="initialize()">
      <div id="header">
 		<b>Riding:</b>  <select name="Riding">
-		  <option value="35096" selected>Trinity-Spadina</option>
-		  <option value = "Renfrew-Nipissing-Pembroke" disabled>Renfrew-Nipissing-Pembroke</option>
+		  <option value="96" selected>96</option>
+		  <option value = "1">1</option>
+		  <option value = "1">1</option>
 		</select>
 	  </div>
 	
@@ -152,10 +147,14 @@ function initialize() {
 		<div id="side_nav">
 
 		
-			<button type="button1">Load Some Copy!</button>
-			<button type="button2">Show on Map</button>
+			<button id="button1">Load Some Copy!</button>
+			<button id="button2">Show on Map</button>
 			<br /><br />
-			<div id="words">First, let's start.<br><br></div>
+            
+			<div id="words">First, let's start.<br><br>
+            
+            Enter Riding Number: <input type="text" id="ridingID" value="96">
+            </div>
 			
 			
 			

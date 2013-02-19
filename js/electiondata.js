@@ -28,6 +28,10 @@
       return "#777777";
     }
     
+    if( party != "ND" && party != "PC" && party != "L" ) {
+      return "#FF00FF";
+    }
+    
     for( i = 0; i < gradients.length - 1; i++ ) {
       if( percentage < gradients[i] ) {
         return partyGradients[party][i];
@@ -35,6 +39,20 @@
     }
     
     return partyGradients[party][i];
+  };
+  
+  
+  google.maps.Polygon.prototype.getBounds = function() {
+    var bounds = new google.maps.LatLngBounds();
+    var paths = this.getPaths();
+    var path;        
+    for (var i = 0; i < paths.getLength(); i++) {
+        path = paths.getAt(i);
+        for (var ii = 0; ii < path.getLength(); ii++) {
+            bounds.extend(path.getAt(ii));
+        }
+    }
+    return bounds;
   };
 
   
@@ -229,23 +247,27 @@
   
    this.electionYear = 2011;
    this.electionType = "provincial";
-   this.ridingCoords = [];
+
    
    this.pollList = {};
    
    this.ridingResults = ridingResults;
    
-   this.gMapsObj = map;
    this.gPoly = null;
    
    this.polyOpts = {
-    paths: [],
-    strokeColor: "#FF0000",
+    paths: [[]],
+    strokeColor: "#000000",
     strokeOpacity: 0.8,
     strokeWeight: 2,
     fillColor: "#FF0000",
-    fillOpacity: 0.35
+    fillOpacity: 0.0
    }; 
+   
+   
+   this.ridingCoords = mapData.ridingBoundary.coords;
+   //this.showBoundary = false;
+   this.initMap( map );
    
    var i;
    for( i = 0; i < this.numPolls; i++ ) {
@@ -262,6 +284,54 @@
    }
    return this;
   };
+  
+  ElectionData.Riding.prototype.initMap = function( map ) {
+     this.gMapsObj = map;
+	 
+	 var i, j;
+	 for( i = 0; i < this.ridingCoords.length; i++ ) {
+       this.polyOpts.paths[i] = [];
+       for( j = 0; j < this.ridingCoords[i].length; j++ ) {
+	     this.polyOpts.paths[i].push( new google.maps.LatLng(this.ridingCoords[i][j][0], this.ridingCoords[i][j][1]));
+       }
+     }
+     
+     this.gPoly = new google.maps.Polygon( this.polyOpts );
+   
+     return this;
+  };
+  
+  ElectionData.Riding.prototype.closeMap = function( map ) {
+    
+    this.hidePolls();
+    this.gPoly.setMap( null );
+    
+    return this;
+
+  };
+  
+  
+  
+  ElectionData.Riding.prototype.showBoundary = function() {
+     if( this.gMapsObj != null && this.gPoly != null ) {
+       this.gPoly.setMap( this.gMapsObj );
+     }
+     
+     return this;
+  };
+  
+  ElectionData.Riding.prototype.hideBoundary = function() {
+     this.gPoly.setMap( null );
+     return this;
+  };
+  
+  ElectionData.Riding.prototype.zoomToFit = function() {
+     if( this.gMapsObj != null && this.gPoly != null ) {
+       this.gMapsObj.fitBounds( this.gPoly.getBounds());
+     }
+     return this;  
+  };
+
   
   ElectionData.Riding.prototype.showPolls = function() {
   

@@ -12,10 +12,12 @@ def csvToDict( csvData ):
   headerRow = csvData[0]
   
   for i in range(0, len(headerRow)):
-    hD.append( headerRow[i] )
+    if( len( headerRow[i].split()) > 1 ) :
+      hD.append( headerRow[i].split()[-1] )     # Deal with the case where the header has more than one last name for a candidate.
+    else :
+      hD.append( headerRow[i] )
     
   dict = []
-
    
   for n in range( 1, len( csvData )):
     line = csvData[n]   
@@ -26,7 +28,7 @@ def csvToDict( csvData ):
       entry['noPollMessage'] = line[5]
       entry['POLL_NUMBER'] = line[2]
       dict.append( entry.copy() )
-      print "Poll number", line[2], "was not held."
+
     elif line[0][:5] != "TOTAL" :
       entry['noPoll'] = False
       entry['noPollMessage'] = ""
@@ -37,36 +39,6 @@ def csvToDict( csvData ):
     
   return dict
 
-
-def parseHeader( header ):
-  # Dump all the column headings into a list
-  
-  hD = []
-  
-  for i in range(0, len(header)):
-    hD.append( header[i] )
-    
-  return hD
-    
-    
-    
-def parseLine( line, headerData ):
-  
-  # First, check to see if we have a valid poll
-  #
-  # - If it starts with "..." we don't.
-  # - Also, if it starts with "TOTALS:" we have arrived at the end.
-  
-  pD = {}
-  
-  if( line[5][:3] == "...") :
-    return pD
-    
-  for i in range( 0, len( line )):
-    pD[headerData[i]] = line[i]
-    
-  return pD
-  
 def parsePollData( poll, pollRecord, candidates, addToRecord=False, noPollData=False ) :
    
     if( noPollData == True ):
@@ -163,78 +135,106 @@ def calculatePollData( poll, candidates ) :
 #
 #
 
-with open('Ontario2011Results.pkl', 'rb') as f:
-  electionResults = pickle.load(f)
-  f.close()
+def pollResults( ridingID, electionResults, path ) :
+
+    pollFileName = path + 'results_2011_' + str( ridingID ).zfill(3) + '.csv'
+    
+
+      
+    with open(pollFileName,'r') as f:
+      reader = csv.reader(f,delimiter=',')
+
+      csvData = []
+      for row in reader:
+        csvData.append( row )
+      
+      f.close()
+      
+
+
+    pollResults = csvToDict( csvData )  
+      
+    ridingData = electionResults['ridings'][str(ridingID)]
+    ridingData['polls'] = {}
+    
+    print "Opened poll file:", ridingID, "-", ridingData['ridingName']
+
+
+    # Now, let's create a dictionary of PARTY <=> CANDIDATE LAST NAME
+
+    parties = ridingData['results'].keys()
+    candidates = {}
+
+    for p in parties: 
+      candidates.update( { p : ridingData['results'][p]['candidateLastName'] })
+
+    # Now, let's clean the data and insert into our ridingData structure
+    #
+    # Note: Some polls have more than one entry.  We merge these here into one poll.
+      
+    splitPollSet = set( ['A', 'B', 'C'] )
+      
+    for poll in pollResults:
+      if( poll['noPoll'] == False and poll['POLL_NUMBER'][-1] in splitPollSet ):
+        pollNumber = poll['POLL_NUMBER'][:-1]
+      else :
+        pollNumber = poll['POLL_NUMBER']
+          
+      while( pollNumber[:1] == "0" ):
+        pollNumber = pollNumber[1:]
+          
+      
+      if(( pollNumber in ridingData['polls'].keys()) == False ):
+        ridingData['polls'].update( { pollNumber : {} } )
+        ridingData['polls'][pollNumber] = parsePollData( poll, ridingData['polls'][pollNumber], candidates, noPollData=poll['noPoll'] )
+      else :
+        ridingData['polls'][pollNumber] = parsePollData( poll, ridingData['polls'][pollNumber], candidates, addToRecord=True )
+
+          
+    ## Now, let's calculate some extra data:
+
+    for poll in ridingData['polls'] :
+      ridingData['polls'][poll] = calculatePollData( ridingData['polls'][poll], candidates )
+      
+    ## Finally, let's drop the extraneous "results" object
+
+    for poll in ridingData['polls'] :
+      if( ridingData['polls'][poll]['noPoll'] == False ):
+        del ridingData['polls'][poll]['results'] 
+                                                              
+
+    outputFileName = path + 'Ont2011_' + str(ridingID) + '.json'                                                          
+                                                              
+    with open(outputFileName, 'w') as f:
+      json.dump(ridingData, f, ensure_ascii = False)
+      f.close()
+      
+    print "Successfully wrote", len( ridingData['polls'] ), "polls to file."
   
-with open('results_2011_096.csv','r') as f:
-  reader = csv.reader(f,delimiter=',')
+    return True
 
-  csvData = []
-  for row in reader:
-    csvData.append( row )
-  
-  f.close()
-
-
-pollResults = csvToDict( csvData )  
-  
-ridingData = electionResults['ridings']['96']
-ridingData['polls'] = {}
-
-
-# Now, let's create a dictionary of PARTY <=> CANDIDATE LAST NAME
-
-parties = ridingData['results'].keys()
-candidates = {}
-
-for p in parties: 
-  candidates.update( { p : ridingData['results'][p]['candidateLastName'] })
-
-# Now, let's clean the data and insert into our ridingData structure
+    
+    
+###### 
 #
-# Note: Some polls have more than one entry.  We merge these here into one poll.
-  
-splitPollSet = set( ['A', 'B', 'C'] )
-  
-for poll in pollResults:
-  if( poll['noPoll'] == False and poll['POLL_NUMBER'][-1] in splitPollSet ):
-    pollNumber = poll['POLL_NUMBER'][:-1]
-  else :
-    pollNumber = poll['POLL_NUMBER']
-      
-  while( pollNumber[:1] == "0" ):
-    pollNumber = pollNumber[1:]
-      
-  #print pollNumber
-  
-  if(( pollNumber in ridingData['polls'].keys()) == False ):
-    ridingData['polls'].update( { pollNumber : {} } )
-    ridingData['polls'][pollNumber] = parsePollData( poll, ridingData['polls'][pollNumber], candidates, noPollData=poll['noPoll'] )
-  else :
-    ridingData['polls'][pollNumber] = parsePollData( poll, ridingData['polls'][pollNumber], candidates, addToRecord=True )
-
+#  Main
     
-    
-
-   
       
-## Now, let's calculate some extra data:
+    
+rootPath = "/Mullin Files/Code/riding_analytics/"
+dataPath = "data/Ont2011/"
 
-for poll in ridingData['polls'] :
-  ridingData['polls'][poll] = calculatePollData( ridingData['polls'][poll], candidates )
-  
-## Finally, let's drop the extraneous "results" object
+path = "" #rootPath + dataPath
 
-for poll in ridingData['polls'] :
-  if( ridingData['polls'][poll]['noPoll'] == False ):
-    del ridingData['polls'][poll]['results'] 
-                                                          
-
-with open('96_Ont2011.json', 'w') as f:
-  json.dump(ridingData, f, ensure_ascii = False)
+electFileName = path + "Ontario2011Results.pkl"
+    
+with open(electFileName, 'rb') as f:
+  electResults = pickle.load(f)
   f.close()
   
+#for i in range( 1, 108 ) :    
+pollResults( 96, electResults, path  )
+
 
 
 

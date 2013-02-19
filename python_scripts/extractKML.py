@@ -28,45 +28,82 @@ def parsePolygon( pol, element ):
     if e.tag == "{http://www.opengis.net/kml/2.2}innerBoundaryIs":
       for ee in e.iter("{http://www.opengis.net/kml/2.2}coordinates"):
         pol['coords'].append( split_coords(ee.text) )
-    #while e.iter() 
-    #ff = e.find( "{http://www.opengis.net/kml/2.2}coordinates" )
-    #print ff.text
-      #pol['coords'] = split_coords(element.text)
 
   return pol
-
-
   
+
+def extractRidingBoundary( ridingID, path ) :
+
+    kmlFileName = path + 'ridingBoundary_' + str( ridingID ) + '.kml'
+
+    with open(kmlFileName, 'r') as bF:
+      doc = parser.parse(bF)
+      
+    print "Opening riding boundary file:", ridingID
+    
+    boundaryPoly = {}
+
+    for element in doc.iter("{http://www.opengis.net/kml/2.2}Polygon"):
+      parsePolygon( boundaryPoly, element )
+        
+    bF.close()
+        
+    return boundaryPoly
+
+
+
+def extractKML( ridingID, path ) :  
   
-kml_file = path.join('./', 'RNP.kml')
+    kmlFileName = path + 'ridingMapData_' + str( ridingID ) + '.kml'
 
-with open(kml_file) as f:
-  doc = parser.parse(f)
-  
-poll_list = []  
-pol = {}
+    with open(kmlFileName, 'r') as f:
+      doc = parser.parse(f)
+      
+    print "Opening riding map file:", ridingID 
+      
+    poll_list = []  
+    pol = {}
 
-for element in doc.iter("{http://www.opengis.net/kml/2.2}ExtendedData", "{http://www.opengis.net/kml/2.2}Polygon"):
-    if element.tag == "{http://www.opengis.net/kml/2.2}ExtendedData":
-      parseData( pol, element )
-    elif element.tag == "{http://www.opengis.net/kml/2.2}Polygon":
-      parsePolygon( pol, element )
-      poll_list.append( pol.copy())
+    for element in doc.iter("{http://www.opengis.net/kml/2.2}ExtendedData", "{http://www.opengis.net/kml/2.2}Polygon"):
+        if element.tag == "{http://www.opengis.net/kml/2.2}ExtendedData":
+          parseData( pol, element )
+        elif element.tag == "{http://www.opengis.net/kml/2.2}Polygon":
+          parsePolygon( pol, element )
+          poll_list.append( pol.copy())
 
- 
-riding = {}  
-riding['name'] = "Renfrew-Nipissing-Pembroke"
-riding['id'] = 74
-riding['num_polls'] = len(poll_list)
-riding['polls'] = poll_list
+     
+    f.close()
+    
+    riding = {}  
+    riding['ridingID'] = ridingID
+    riding['num_polls'] = len(poll_list)
+    riding['polls'] = poll_list
+    
+    riding['ridingBoundary'] = extractRidingBoundary( ridingID, path )
+    
+    outputFile = path + 'ridingMapData_' + str( ridingID ) + '.json'
 
+    with open(outputFile, 'w') as f:
+      json.dump(riding, f)
+      f.close()
+      
+    print "Successfully wrote riding map file:", ridingID 
 
-print json.dumps(riding)
+    return True
+    
+    
+###### 
+#
+#  Main
+    
+    
+rootPath = "/Mullin Files/Code/riding_analytics/"
+dataPath = "data/Ont2011/"
 
-with open('RNP.json', 'w') as f:
-  json.dump(riding, f)
-  f.close()
+path = rootPath + dataPath
 
+for i in range( 1, 108 ) :    
+  extractKML( i, path  )
 
 	  
 
