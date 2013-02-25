@@ -232,6 +232,9 @@
   };
   
   ElectionData.Poll.prototype.hide = function() {
+     if( infoWindowObj != null ) {
+       infoWindowObj.close();
+     }
      this.gPoly.setMap( null );
      return this;
   };
