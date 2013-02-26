@@ -242,7 +242,7 @@
   //////////////////////////////////////////////////////////////////////////////////////////
   // Riding object definition.
   
-  ElectionData.Riding = function( ridingData, ridingResults, map ) {
+  ElectionData.Riding = function( ridingData, ridingResults/*, map*/ ) {
   
    ridingData.hasOwnProperty( "name" ) ? this.ridingName = ridingData.name : this.ridingName = "";
    ridingData.hasOwnProperty( "id" ) ? this.ridingID = ridingData.id : this.ridingID = 0;
@@ -269,20 +269,16 @@
    
    
    this.ridingCoords = mapData.ridingBoundary.coords;
-   //this.showBoundary = false;
-   this.initMap( map );
    
    var i;
    for( i = 0; i < this.numPolls; i++ ) {
      if( ridingResults.polls.hasOwnProperty( ridingData.polls[i].poll_number )) {
        console.log( "Adding: " + ridingData.polls[i].poll_number );
        this.pollList[ridingData.polls[i].poll_number] = new ElectionData.Poll(ridingData.polls[i], ridingResults.polls[ridingData.polls[i].poll_number] );
-	   this.pollList[ridingData.polls[i].poll_number].initMap(this.gMapsObj);
      }
      else {
        console.log( "No results data for: " + ridingData.polls[i].poll_number );
        this.pollList[ridingData.polls[i].poll_number] = new ElectionData.Poll(ridingData.polls[i], null );
-	   this.pollList[ridingData.polls[i].poll_number].initMap(this.gMapsObj);            
     }
    }
    return this;
@@ -300,11 +296,15 @@
      }
      
      this.gPoly = new google.maps.Polygon( this.polyOpts );
+     
+     for( i in this.pollList ) {
+       this.pollList[i].initMap( this.gMapsObj );
+     }
    
      return this;
   };
   
-  ElectionData.Riding.prototype.closeMap = function( map ) {
+  ElectionData.Riding.prototype.closeMap = function() {
     
     this.hidePolls();
     this.gPoly.setMap( null );
