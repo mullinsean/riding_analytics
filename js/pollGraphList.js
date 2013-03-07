@@ -22,101 +22,126 @@ $(function(){
 
   var PollChart = Backbone.Model.extend({
     defaults: {
-      showParties: ["ND", "L", "PC"],
-      xOffset : 0,
-      yOffset : 0      
+      votes : [0.2564,0.5282,0.1692,0.0359]
     },
     
     initialize: function() {
-      this.pollData = seedData;     
+      var i;
+      var g = this.get('votes');
+      for (i = 0; i < 4; i++ ) {
+        g[i] = Math.random();
+      }
+      this.set("votes", g );
     }
   });
   
-  var PollChartView = Backbone.View.extend({
+  var PollList = Backbone.Collection.extend({
+    model : PollChart 
+  });
+  
+  var PollChartView = Backbone.View.extend ({
+  
+    tagName : "rect",
+    
+    el: $("svg#pollChart"),
+    
+    initialize : function() {
+      _.bindAll( this, 'render');
+      
+      this.el = $("svg#pollChart")[0];
+      
+      
+      
+      this.bar_h = 10;
+      
+      this.render();
+    },
+    
+    render : function() {
+      var data = this.model.get('votes');
+      
+      var chart = d3.select(this.el);
+
+      var x = d3.scale.linear()
+         .domain([0, 1])
+         .range([0, 100]);
+         
+      var y = d3.scale.ordinal()
+         .domain(data)
+         .rangeBands([0, 100]);
+         
+      var color = d3.scale.ordinal()
+        .domain([0,1,2,3])
+        .range(["rgb(255,102,0)", "rgb(0,0,255)", "rgb(255,0,0)", "rgb(0,255,0)"]);
+      
+      var b_har = this.bar_h;
+      var qbert = this.model.get('yIndex') * 45;
+         
+      chart.selectAll("rect#poll" + this.model.get('yIndex'))
+          .data(data)
+        .enter().append("rect")
+          .attr("id", "poll" + this.model.get('yIndex'))
+          .attr("y", function(d, i) { return i * b_har + qbert; })
+          .attr("fill", function(d, i) { return color( i ); } )
+          .attr("width", x )
+          .attr("height", this.bar_h);
+     }
+  });
+  
+  var PollListView = Backbone.View.extend({
     
     
-    //tagName : "li";
+    tagName : "svg",
     
     el: $('#container'),
     
+    events : {
+      'click button#add': 'addItem'
+    },
+    
     initialize: function() {
-      _.bindAll(this, 'render');    
+      _.bindAll(this, 'render', 'addItem', 'appendItem');    
+      
+      this.chart_x = 200;
+      this.chart_y = 500;
+      
+      this.collection = new PollList();
+      this.collection.bind('add', this.appendItem);
+      
+      this.counter = 0;
       
       this.render();
     },
     
     render: function() {
-      var chart_x = 200;
-      var chart_y = 2000;
-      var bar_h = 10;
-
-      //var data = [4, 8, 15, 16, 23, 42];
+    
+      $(this.el).append("<button id='add'>Add</button>");
       
-      var data = [
-        {"party": "NDP", "vote": 0.45 },
-        {"party": "PC", "vote": 0.20 },
-        {"party": "LIB", "vote": 0.35 }
-      ];
-
       var chart = d3.select(this.el).append("svg")
-           .attr("class", "chart")
-           .attr("width", chart_x)
-           .attr("height", chart_y)
-           
-      var x = d3.scale.linear()
-         .domain([0, 1])
-         .range([0, chart_x]);
-         
-      var y = d3.scale.ordinal()
-         .domain(function( d ) { d.party } )
-         .rangeBands([0, chart_y]);
-         
-      var color = d3.scale.ordinal()
-        .domain(["NDP", "PC", "LIB"])
-        .range(["rgb(255,102,0)", "rgb(0,0,255)", "rgb(255,0,0)"]);
-         
-      /*chart.selectAll("line")
-          .data(x.ticks(10))
-        .enter().append("line")
-          .attr("x1", x)
-          .attr("x2", x)
-          .attr("y1", 0)
-          .attr("y2", chart_y)
-          .style("stroke", "#ccc");
-          
-      chart.selectAll(".rule")
-         .data(x.ticks(10))
-       .enter().append("text")
-         .attr("class", "rule")
-         .attr("x", x)
-         .attr("y", 0)
-         .attr("dy", -3)
-         .attr("text-anchor", "middle")
-         .text(String);*/
-       
-         
-      chart.selectAll("rect")
-          .data(data)
-        .enter().append("rect")
-          .attr("y", function(d, i) { return i * bar_h; })
-          .attr("fill", function( d ) { return color( d.party ); })
-          .attr("width", function( d, i ) { return x( d.vote ) })
-          .attr("height", bar_h);
-      
-/*      chart.selectAll("rect")
-        .on("click", function( d, i ) {
-           console.log( "Clicked on party: " + d.party );
-         });             */
+        .attr("class", "chart")
+        .attr("width", this.chart_x)
+        .attr("height", this.chart_y)
+        .attr("id", "pollChart" )
+    },
 
-
-
-
-      
+    addItem : function () {
+      var poll = new PollChart({
+        yIndex : this.counter 
+      });
+      this.collection.add(poll);
+      this.counter++;
+    },
+    
+    appendItem : function( poll ) {
+      var pollView = new PollChartView({
+        model : poll
+      });
+      pollView.render();
+    
     }
   });
 
-  
-  var paw = new PollChartView();
+  var pL = new PollListView();
   
   console.log( "Test" );
 

@@ -27,7 +27,7 @@ def csvToDict( csvData ):
 
  
 
-f1 = open('CandidateListOnt2011.csv','r')
+f1 = open('CandidateListOnt2007.csv','r')
 reader = csv.reader(f1,delimiter=',')
 
 csvData = []
@@ -143,11 +143,11 @@ results = sorted( electionResults['aggregateResults'].items(), key=itemgetter(1)
 electionResults['ridings'] = ridings
 electionResults['mainParties'] = mainParties  
     
-with open('Ontario2011Results.json', 'w') as f:
+with open('Ontario2007Results.json', 'w') as f:
   json.dump(electionResults, f, ensure_ascii = False)
   f.close()
 
-with open('Ontario2011Results.pkl', 'wb') as f:
+with open('Ontario2007Results.pkl', 'wb') as f:
   pickle.dump(electionResults, f)
   f.close()
   
