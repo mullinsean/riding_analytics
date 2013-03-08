@@ -17,7 +17,7 @@ def split_coords( coords ):
 def parseData( pol, element ):
   for e in element.iter( "{http://www.opengis.net/kml/2.2}SimpleData" ):
     el_name = e.get('name')
-    if el_name == "POLL_DIV_1":                     ########## ONLY DIFFERENCE BETWEEN 2007 & 2011 is "POLL_DIV_1" (2011) vs. "POLL_DIV_3" (2007)
+    if el_name == "POLL_DIV_3":
       pol['poll_number'] = e.text   
       while( pol['poll_number'][:1] == "0" ):       # Delete leading zeros
         pol['poll_number'] = pol['poll_number'][1:]
@@ -117,7 +117,7 @@ def extractKML( ridingID, path ) :
     
     
 rootPath = "/Mullin Files/Code/riding_analytics/"
-dataPath = "data/Ont2011/"
+dataPath = "data/Ont2007/"
 
 path = rootPath + dataPath
 

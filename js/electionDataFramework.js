@@ -11,6 +11,7 @@ $( document ).ready(function() {
     defaults : {
       rName : "Trinity-Spadina",
       rID : 93,
+      electionYear : 2011,
       ridingDataLoaded : false,
       mapDataLoaded : false,
     },
@@ -19,6 +20,7 @@ $( document ).ready(function() {
       _.bindAll( this, 'ridingChanged', 'ridingLoaded');
     
       this.bind( "change:rID", this.ridingChanged );
+      this.bind( "change:electionYear", this.ridingChanged );
       this.bind( "ridingHasLoaded", this.ridingLoaded );
     },
     
@@ -32,7 +34,8 @@ $( document ).ready(function() {
       this.set( 'mapDataLoaded', false );
       this.set('ridingDataLoaded', false );
       
-      fileStr = "https://frogcakeskierscuba.s3.amazonaws.com/ontario2011/ridingMapData_" + this.get( 'rID' ) + ".json";
+      fileStr = "https://frogcakeskierscuba.s3.amazonaws.com/ontario" + this.get('electionYear') + "/ridingMapData_" + this.get( 'rID' ) + ".json";
+      //fileStr = "http://individual.utoronto.ca/seanmullin/testing/ridingMapData_96.json";
       $.getJSON(fileStr, function(data) {
         mapData = data;
         self.set( 'mapDataLoaded', true );
@@ -41,7 +44,8 @@ $( document ).ready(function() {
         }
       });    
 
-      fileStr = "https://frogcakeskierscuba.s3.amazonaws.com/ontario2011/Ont2011_" + this.get( 'rID' ) + ".json";
+      fileStr = "https://frogcakeskierscuba.s3.amazonaws.com/ontario" + this.get('electionYear') + "/Ont" + this.get('electionYear') + "_" + this.get( 'rID' ) + ".json";
+      //fileStr = "http://individual.utoronto.ca/seanmullin/testing/Ont2007_96.json";
       $.getJSON(fileStr, function(data) {
         ridingData = data;
         self.set('ridingDataLoaded', true );
@@ -68,6 +72,7 @@ $( document ).ready(function() {
     
     events: {
       'change select#ridingNumber': 'changeRiding',
+      'change select#election': 'changeRiding',
       'click button#button1': 'changeName'
     },
     
@@ -105,8 +110,8 @@ $( document ).ready(function() {
     },
     
     changeRiding: function() {
-      this.model.set( { 'rID' : $('#ridingNumber').val() } );
-      console.log( "Changed to " + $('#ridingNumber').val());
+      this.model.set( { 'rID' : $('#ridingNumber').val(), 'electionYear' : $('#election').val() } );
+      console.log( "Changed to " + $('#ridingNumber').val() + " " + $('#election').val());
       this.render();
     },
     

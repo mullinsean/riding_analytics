@@ -73,6 +73,10 @@
    
    this.pollResults = pollResults;
    
+   if( this.pollNumber == 17 ) {
+     console.log( "HELP!" );
+   }
+   
    console.log( "Poll Number: " + this.pollNumber + " No Poll: " + this.noPoll() );
      
    if( this.noPoll() == false ) {
@@ -151,7 +155,7 @@
   }; 
   
   ElectionData.Poll.prototype.noPoll = function() {
-    if( !this.hasOwnProperty( "pollResults" )) {
+    if( !this.hasOwnProperty( "pollResults" ) || this.pollResults == null ) {
       return true;
     }
     else {
@@ -272,6 +276,7 @@
    
    var i;
    for( i = 0; i < this.numPolls; i++ ) {
+     console.log( "Index: " + i + ", Poll Num: " + ridingData.polls[i].poll_number );
      if( ridingResults.polls.hasOwnProperty( ridingData.polls[i].poll_number )) {
        console.log( "Adding: " + ridingData.polls[i].poll_number );
        this.pollList[ridingData.polls[i].poll_number] = new ElectionData.Poll(ridingData.polls[i], ridingResults.polls[ridingData.polls[i].poll_number] );

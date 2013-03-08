@@ -16,6 +16,9 @@ def csvToDict( csvData ):
       hD.append( headerRow[i].split()[-1] )     # Deal with the case where the header has more than one last name for a candidate.
     else :
       hD.append( headerRow[i] )
+      
+    while( hD[i][-1] == " " ):                  # Remove trailing spaces.
+      hD[i] = hD[i][:-1]
     
   dict = []
    
@@ -23,10 +26,10 @@ def csvToDict( csvData ):
     line = csvData[n]   
     entry = {}
     
-    if( line[5][:3] == "..." ) :
+    if( line[2][:3] == "..." ) :                 ### This is the BIG CHANGE:  should be [5] for 2011; also change noPollMessage to [5] below
       entry['noPoll'] = True
-      entry['noPollMessage'] = line[5]
-      entry['POLL_NUMBER'] = line[2]
+      entry['noPollMessage'] = line[2]
+      entry['POLL_NUMBER'] = line[headerRow.index('POLL_NUMBER')]
       dict.append( entry.copy() )
 
     elif line[0][:5] != "TOTAL" :
@@ -45,6 +48,8 @@ def parsePollData( poll, pollRecord, candidates, addToRecord=False, noPollData=F
       pollRecord['noPoll'] = True
       pollRecord['noPollMessage'] = poll['noPollMessage']
       return pollRecord
+      
+    #pprint( poll )
    
     if( addToRecord == True):    
       addRecord = pollRecord
@@ -55,6 +60,7 @@ def parsePollData( poll, pollRecord, candidates, addToRecord=False, noPollData=F
       pollRecord["electors"] = int( poll['ELECTORS']) + addRecord['electors']
 
       for c in candidates:
+             
         pollRecord['results'][c]['votes'] = int( poll[candidates[c]]) + addRecord['results'][c]['votes']      
       
         if( pollRecord['validVotes'] == 0 ):
@@ -72,7 +78,7 @@ def parsePollData( poll, pollRecord, candidates, addToRecord=False, noPollData=F
       pollRecord.update( { "pollLocation" : poll['POLL_LOCATION'] })  
   
       # Flag for advance polls  
-      pollRecord.update( { "advancePoll" : poll['POLL_NUMBER'][:3] == "ADV" })
+      pollRecord.update( { "advancePoll" : poll['POLL_NUMBER'][:3] == "Adv" })
       
       pollRecord.update( { "rejected" : int( poll['REJECTED'])})
       pollRecord.update( { "unmarked" : int( poll['UNMARKED'])})
@@ -92,7 +98,6 @@ def parsePollData( poll, pollRecord, candidates, addToRecord=False, noPollData=F
         
         pollRecord['results'].update( { c : { "votes" : int( poll[candidates[c]]), "percentage" : pctVote }} )
       
-        
     return pollRecord
   
 def calculatePollData( poll, candidates ) :
@@ -124,9 +129,6 @@ def calculatePollData( poll, candidates ) :
     poll.update( { "percentTurnout" : round( float(poll['validVotes']) 
                                                         * 100 / float(poll['electors']), 2) })
                                                         
-#  if( poll['noPoll'] ) :
-#    pprint( poll)
-    
   return poll
     
   
@@ -137,7 +139,7 @@ def calculatePollData( poll, candidates ) :
 
 def pollResults( ridingID, electionResults, path ) :
 
-    pollFileName = path + 'results_2011_' + str( ridingID ).zfill(3) + '.csv'
+    pollFileName = path + 'results_2007_' + str( ridingID ).zfill(3) + '.csv'
     
 
       
@@ -172,7 +174,7 @@ def pollResults( ridingID, electionResults, path ) :
     #
     # Note: Some polls have more than one entry.  We merge these here into one poll.
       
-    splitPollSet = set( ['A', 'B', 'C'] )
+    splitPollSet = set( ['A', 'B', 'C', 's'] )
       
     for poll in pollResults:
       if( poll['noPoll'] == False and poll['POLL_NUMBER'][-1] in splitPollSet ):
@@ -182,8 +184,10 @@ def pollResults( ridingID, electionResults, path ) :
           
       while( pollNumber[:1] == "0" ):
         pollNumber = pollNumber[1:]
+        
+      #print pollNumber
           
-      
+
       if(( pollNumber in ridingData['polls'].keys()) == False ):
         ridingData['polls'].update( { pollNumber : {} } )
         ridingData['polls'][pollNumber] = parsePollData( poll, ridingData['polls'][pollNumber], candidates, noPollData=poll['noPoll'] )
@@ -203,7 +207,7 @@ def pollResults( ridingID, electionResults, path ) :
         del ridingData['polls'][poll]['results'] 
                                                               
 
-    outputFileName = path + 'Ont2011_' + str(ridingID) + '.json'                                                          
+    outputFileName = path + 'Ont2007_' + str(ridingID) + '.json'                                                          
                                                               
     with open(outputFileName, 'w') as f:
       json.dump(ridingData, f, ensure_ascii = False)
@@ -222,18 +226,18 @@ def pollResults( ridingID, electionResults, path ) :
       
     
 rootPath = "/Mullin Files/Code/riding_analytics/"
-dataPath = "data/Ont2011/"
+dataPath = "data/Ont2007/"
 
-path = "" #rootPath + dataPath
+path = rootPath + dataPath
 
-electFileName = path + "Ontario2011Results.pkl"
+electFileName = "Ontario2007Results.pkl"
     
 with open(electFileName, 'rb') as f:
   electResults = pickle.load(f)
   f.close()
   
-#for i in range( 1, 108 ) :    
-pollResults( 96, electResults, path  )
+for i in range( 1, 108 ) :    
+  pollResults( i, electResults, path  )
 
 
 
