@@ -12,8 +12,11 @@
   {
     "ND" : ["#FFCF9F", "#FFBB77", "#FFA74F", "#FF9327", "#FF7F00"],
     "PC" : ["#9F9FFF", "#7777FF", "#4F4FFF", "#2727FF", "#0000FF"],
-    "L" :  ["#FF9F9F", "#FF7777", "#FF4F4F", "#FF2727", "#FF0000"]
+    "L" :  ["#FF9F9F", "#FF7777", "#FF4F4F", "#FF2727", "#FF0000"], 
+    "GP" : ["#9FC59F", "#77AD77", "#4F954F", "#277D27", "#006600"]
   };
+  
+  var turnoutGradients = ["#BFCCBF", "#9FB29F", "#7F997F", "#5F7F5F", "#3F663F", "#1F4C1F", "#003300"];
   
   
   var colorChooser = function( party, percentage )
@@ -28,7 +31,7 @@
       return "#777777";
     }
     
-    if( party != "ND" && party != "PC" && party != "L" ) {
+    if( party != "ND" && party != "PC" && party != "L" && party != "GP") {
       return "#FF00FF";
     }
     
@@ -40,6 +43,20 @@
     
     return partyGradients[party][i];
   };
+  
+  var turnoutColorChooser = function( percentage )
+  {
+    var gradients = [20,30,35,40,50,60];
+    
+      for( i = 0; i < gradients.length - 1; i++ ) {
+      if( percentage < gradients[i] ) {
+        return turnoutGradients[i];
+      }
+    }
+    
+    return turnoutGradients[i];  
+  }
+  
   
   
   google.maps.Polygon.prototype.getBounds = function() {
@@ -72,10 +89,6 @@
    this.infoWindowObj = null;
    
    this.pollResults = pollResults;
-   
-   if( this.pollNumber == 17 ) {
-     console.log( "HELP!" );
-   }
    
    console.log( "Poll Number: " + this.pollNumber + " No Poll: " + this.noPoll() );
      
@@ -115,22 +128,37 @@
 	 (function( poll ) {
 	   google.maps.event.addListener( poll.gPoly, 'click', function( e ) { 
 	     
-		 var str = "Click from poll #" + poll.pollNumber + "<br>";
+		 var str = "<B>Poll #" + poll.pollNumber + "</B><br><br>";
          
          for( i in poll.pollResults ) {
            if( poll.pollResults.hasOwnProperty( i ) ) {
-             if( i == "placeName" || i == "electors" || i == "validVotes" || i == "pollLocation" || i == "percentTurnout" ) {
-               str += i + ": " + poll.pollResults[i] + "<br>";
+             if( i == "placeName" ||  i == "pollLocation"  ) {
+               str += "<b>" + poll.pollResults[i] + "</b><br>";
+             }
+             else if ( i == "electors"  ){
+               str += "Electors: " + poll.pollResults[i] + "<br>";
+             
+             }
+             else if ( i == "percentTurnout" ){
+               str += "<br>Turnout: " + poll.pollResults[i] + "%<br>";
+             
+             }
+             else if ( i == "validVotes" ){
+               str += "Votes cast: " + poll.pollResults[i] + "<br>";
+             
              }
            }
          }
          
-         str += "<br><br><B>Results:</B><br>";
-         
          if( !poll.noPoll() ) {
+           str += "<br><br><B>Results:</B><br><br>";
+           str += "<table border='1'><tr><td>Party</td><td>Votes</td><td>%</td></tr>";
+           
            for( i = 0; i < poll.pollResults.candidates.length; i++ ) {
-             str += poll.pollResults.candidates[i].party + ": " + poll.pollResults.candidates[i].votes + " (" + poll.pollResults.candidates[i].percentage + "%)<br>";
+             str += "<tr><td>" + poll.pollResults.candidates[i].party + "</td><td>" + poll.pollResults.candidates[i].votes + "</td><td>" + poll.pollResults.candidates[i].percentage + "%</td></tr>";
            }
+           str += "</table>";
+           
          }
          else {
            str += poll.pollResults.noPollMessage + "<br>";
@@ -227,9 +255,32 @@
   ElectionData.Poll.prototype.getPollNum = function() {
      return this.pollNumber;
   }; 
+  
+  ElectionData.Poll.prototype.setFillOption = function( fillOption ) {
+    if( fillOption == "party" ) {
+      if( this.noPoll() == false ) {
+        var colour = colorChooser( this.pollResults.winner, this.pollResults.candidates[0].percentage );
+      }
+      else {
+        var colour = "#777777";
+      }    
+      this.setFillColor( colour );
+    }
+    else if( fillOption == "turnout" ) {
+      if( this.noPoll() == false ) {
+        var colour = turnoutColorChooser( this.pollResults.percentTurnout );
+      }
+      else {
+        var colour = "#777777";
+      }    
+      this.setFillColor( colour );        
+    }
+    return this;
+  }; 
     
   
   ElectionData.Poll.prototype.show = function() {
+  
      if( this.gMapsObj != null && this.gPoly != null )
 	   this.gPoly.setMap( this.gMapsObj );
      return this;
@@ -338,6 +389,15 @@
        this.gMapsObj.fitBounds( this.gPoly.getBounds());
      }
      return this;  
+  };
+  
+  ElectionData.Riding.prototype.setFillOption = function( fillOption ) {
+  
+    var i;
+    for( i in this.pollList ) {
+      this.pollList[i].setFillOption( fillOption );
+    }
+    return this;
   };
 
   

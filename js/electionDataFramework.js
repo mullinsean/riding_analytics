@@ -3,7 +3,7 @@ var ridingNameList = [[1, "AJAX-PICKERING"], [2, "ALGOMA-MANITOULIN"], [3, "ANCA
 //var map;
 
 var ridingData, mapData;
-var riding;
+var riding = null;
 
 $( document ).ready(function() {
  
@@ -73,6 +73,7 @@ $( document ).ready(function() {
     events: {
       'change select#ridingNumber': 'changeRiding',
       'change select#election': 'changeRiding',
+      'change select#fillType': 'changeShading',
       'click button#button1': 'changeName'
     },
     
@@ -80,7 +81,7 @@ $( document ).ready(function() {
     
       var i;
       
-      _.bindAll( this, 'render', 'changeRiding', 'changeName', 'updateRiding' );
+      _.bindAll( this, 'render', 'changeRiding', 'changeName', 'updateRiding', 'changeShading' );
       
       this.model = new Riding();
       
@@ -99,6 +100,8 @@ $( document ).ready(function() {
       }
       
       this.model.on( "updateRiding", this.updateRiding );
+      
+      this.fillType = "party";
       
       this.render();
     },
@@ -120,11 +123,19 @@ $( document ).ready(function() {
     },
     
     updateRiding: function() {
-      console.log( "Here!" );
+
       riding.initMap( this.map );
       riding.zoomToFit();
+      riding.setFillOption( $('#fillType').val());
       //riding.showBoundary();
       riding.showPolls();
+    },
+    
+    changeShading:  function() {
+      console.log( "Here! " + $('#fillType').val() );
+      if( riding != null ) {
+        riding.setFillOption( $('#fillType').val());
+      }
     }
     
   });
