@@ -74,18 +74,21 @@ $( document ).ready(function() {
       'change select#ridingNumber': 'changeRiding',
       'change select#election': 'changeRiding',
       'change select#fillType': 'changeShading',
-      'click button#button1': 'changeName'
+      'click button#button1': 'changeName',
+      'click button#hidePanel': 'hidePanel'
     },
     
     initialize: function() {
     
       var i;
       
-      _.bindAll( this, 'render', 'changeRiding', 'changeName', 'updateRiding', 'changeShading' );
+      _.bindAll( this, 'render', 'changeRiding', 'changeName', 'updateRiding', 'changeShading', 'hidePanel' );
       
       this.model = new Riding();
       
      // Initialize Google Maps;
+     
+     
       
 	  var mapOptions = {
 	    center: new google.maps.LatLng(43.639552217043267,-79.378504391148113),
@@ -136,6 +139,10 @@ $( document ).ready(function() {
       if( riding != null ) {
         riding.setFillOption( $('#fillType').val());
       }
+    },
+    
+    hidePanel: function() {
+      $("#side_nav").hide();//"slide", { direction: "left" }, 1000);
     }
     
   });
