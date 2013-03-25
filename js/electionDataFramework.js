@@ -2,7 +2,7 @@ var ridingNameList = [[1, "AJAX-PICKERING"], [2, "ALGOMA-MANITOULIN"], [3, "ANCA
 	
 //var map;
 
-var ridingData, mapData;
+var ridingData, mapData, boundaryData;
 var riding = null;
 
 $( document ).ready(function() {
@@ -14,6 +14,7 @@ $( document ).ready(function() {
       electionYear : 2011,
       ridingDataLoaded : false,
       mapDataLoaded : false,
+      boundaryDataLoaded : false,
     },
     
     initialize: function() {
@@ -33,23 +34,34 @@ $( document ).ready(function() {
       
       this.set( 'mapDataLoaded', false );
       this.set('ridingDataLoaded', false );
+      this.set('boundaryDataLoaded', false );
       
       fileStr = "https://frogcakeskierscuba.s3.amazonaws.com/ontario" + this.get('electionYear') + "/ridingMapData_" + this.get( 'rID' ) + ".json";
       //fileStr = "http://individual.utoronto.ca/seanmullin/testing/ridingMapData_96.json";
       $.getJSON(fileStr, function(data) {
         mapData = data;
         self.set( 'mapDataLoaded', true );
-        if( self.get( 'ridingDataLoaded' )) {
+        if( self.get( 'ridingDataLoaded' ) && self.get( 'boundaryDataLoaded' )) {
           self.trigger( 'ridingHasLoaded' );
         }
       });    
 
       fileStr = "https://frogcakeskierscuba.s3.amazonaws.com/ontario" + this.get('electionYear') + "/Ont" + this.get('electionYear') + "_" + this.get( 'rID' ) + ".json";
-      //fileStr = "http://individual.utoronto.ca/seanmullin/testing/Ont2007_96.json";
+      //fileStr = "http://individual.utoronto.ca/seanmullin/testing/Ont2011_96.json";
       $.getJSON(fileStr, function(data) {
         ridingData = data;
         self.set('ridingDataLoaded', true );
-        if( self.get( 'mapDataLoaded' )) {
+        if( self.get( 'mapDataLoaded' ) && self.get( 'boundaryDataLoaded' )) {
+          self.trigger( 'ridingHasLoaded' );
+        }
+      });
+      
+      fileStr = "https://frogcakeskierscuba.s3.amazonaws.com/ontario" + this.get('electionYear') + "/ridingMapBoundaryData_" + this.get( 'rID' ) + ".json";
+      //fileStr = "http://individual.utoronto.ca/seanmullin/testing/ridingMapBoundaryData_96.json";
+      $.getJSON(fileStr, function(data) {
+        boundaryData = data;
+        self.set('boundaryDataLoaded', true );
+        if( self.get( 'ridingDataLoaded' ) && self.get( 'mapDataLoaded' )) {
           self.trigger( 'ridingHasLoaded' );
         }
       });
@@ -60,7 +72,7 @@ $( document ).ready(function() {
       if( riding ) {
         riding.closeMap();
       }
-      riding = new ElectionData.Riding( mapData, ridingData );
+      riding = new ElectionData.Riding( mapData, ridingData, boundaryData );
       this.trigger( 'updateRiding' );
     }
     
@@ -130,7 +142,7 @@ $( document ).ready(function() {
       riding.initMap( this.map );
       riding.zoomToFit();
       riding.setFillOption( $('#fillType').val());
-      //riding.showBoundary();
+      riding.showBoundary();
       riding.showPolls();
     },
     

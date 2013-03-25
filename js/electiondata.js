@@ -297,7 +297,7 @@
   //////////////////////////////////////////////////////////////////////////////////////////
   // Riding object definition.
   
-  ElectionData.Riding = function( ridingData, ridingResults/*, map*/ ) {
+  ElectionData.Riding = function( ridingData, ridingResults, boundaryData/*, map*/ ) {
   
    ridingData.hasOwnProperty( "name" ) ? this.ridingName = ridingData.name : this.ridingName = "";
    ridingData.hasOwnProperty( "id" ) ? this.ridingID = ridingData.id : this.ridingID = 0;
@@ -323,7 +323,7 @@
    }; 
    
    
-   this.ridingCoords = mapData.ridingBoundary.coords;
+   this.ridingCoords = boundaryData.coords;
    
    var i;
    for( i = 0; i < this.numPolls; i++ ) {
