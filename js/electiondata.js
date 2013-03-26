@@ -297,19 +297,14 @@
   //////////////////////////////////////////////////////////////////////////////////////////
   // Riding object definition.
   
-  ElectionData.Riding = function( ridingData, ridingResults, boundaryData/*, map*/ ) {
-  
-   ridingData.hasOwnProperty( "name" ) ? this.ridingName = ridingData.name : this.ridingName = "";
-   ridingData.hasOwnProperty( "id" ) ? this.ridingID = ridingData.id : this.ridingID = 0;
-   ridingData.hasOwnProperty( "num_polls" ) ? this.numPolls = ridingData.num_polls : this.numPolls = 0;
-  
+  ElectionData.Riding = function( ridingResults, boundaryData ) {
+ 
    this.electionYear = 2011;
    this.electionType = "provincial";
-
+  
+   this.ridingResults = ridingResults;
    
    this.pollList = {};
-   
-   this.ridingResults = ridingResults;
    
    this.gPoly = null;
    
@@ -318,27 +313,40 @@
     strokeColor: "#000000",
     strokeOpacity: 0.8,
     strokeWeight: 2,
-    fillColor: "#FF0000",
-    fillOpacity: 0.0
+    fillColor: "#5F7F5F",
+    fillOpacity: 0.6
    }; 
-   
    
    this.ridingCoords = boundaryData.coords;
    
-   var i;
-   for( i = 0; i < this.numPolls; i++ ) {
-     console.log( "Index: " + i + ", Poll Num: " + ridingData.polls[i].poll_number );
-     if( ridingResults.polls.hasOwnProperty( ridingData.polls[i].poll_number )) {
-       console.log( "Adding: " + ridingData.polls[i].poll_number );
-       this.pollList[ridingData.polls[i].poll_number] = new ElectionData.Poll(ridingData.polls[i], ridingResults.polls[ridingData.polls[i].poll_number] );
-     }
-     else {
-       console.log( "No results data for: " + ridingData.polls[i].poll_number );
-       this.pollList[ridingData.polls[i].poll_number] = new ElectionData.Poll(ridingData.polls[i], null );
-    }
-   }
    return this;
   };
+   
+
+  ElectionData.Riding.prototype.addPollData = function( ridingData ) {
+
+     ridingData.hasOwnProperty( "name" ) ? this.ridingName = ridingData.name : this.ridingName = "";
+     ridingData.hasOwnProperty( "id" ) ? this.ridingID = ridingData.id : this.ridingID = 0;
+     ridingData.hasOwnProperty( "num_polls" ) ? this.numPolls = ridingData.num_polls : this.numPolls = 0;
+  
+     this.pollList = {};
+     
+     var i;
+     
+     for( i = 0; i < this.numPolls; i++ ) {
+       console.log( "Index: " + i + ", Poll Num: " + ridingData.polls[i].poll_number );
+       if( this.ridingResults.polls.hasOwnProperty( ridingData.polls[i].poll_number )) {
+         console.log( "Adding: " + ridingData.polls[i].poll_number );
+         this.pollList[ridingData.polls[i].poll_number] = new ElectionData.Poll(ridingData.polls[i], this.ridingResults.polls[ridingData.polls[i].poll_number] );
+       }
+       else {
+         console.log( "No results data for: " + ridingData.polls[i].poll_number );
+         this.pollList[ridingData.polls[i].poll_number] = new ElectionData.Poll(ridingData.polls[i], null );
+      }
+     }
+     return this;
+  };
+  
   
   ElectionData.Riding.prototype.initMap = function( map ) {
      this.gMapsObj = map;
@@ -353,8 +361,10 @@
      
      this.gPoly = new google.maps.Polygon( this.polyOpts );
      
-     for( i in this.pollList ) {
-       this.pollList[i].initMap( this.gMapsObj );
+     if( this.pollList ) {
+       for( i in this.pollList ) {
+         this.pollList[i].initMap( this.gMapsObj );
+       }
      }
    
      return this;

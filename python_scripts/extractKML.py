@@ -5,6 +5,7 @@ import json
 from pprint import pprint
 import sys
 import Polygon
+import Polygon.Utils
 
 def split_coords( coords ):
   c = []
@@ -72,6 +73,9 @@ def calculateRidingBoundary( polls ) :
     
     for poll in polls:
       pollPoly = Polygon.Polygon( poll['coords'][0] )
+      for i in range( 1, len( poll['coords'] )):
+        pollPoly.addContour( poll['coords'][i], 1 )
+      pollPoly = Polygon.Utils.fillHoles( pollPoly )
       boundaryPoly = boundaryPoly + pollPoly         # Use built in UNION function ("+") to add poll boundaries together
       sys.stdout.write("+")
       
@@ -166,8 +170,8 @@ dataPath = "data/Ont2011/"
 
 path = rootPath + dataPath
 
-for i in range( 1, 108 ) :    
-  extractKML( i, path  )
+#for i in range( 1, 108 ) :    
+extractKML( 58, path  )
 
 	  
 
