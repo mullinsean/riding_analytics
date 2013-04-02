@@ -19,10 +19,10 @@ def loadBoundaries( path ) :
       
     f.close()
     
-    p = Polygon.Polygon( jsonBoundary['coords'][0] )
-    i = 1
+    p = Polygon.Polygon()
+    i = 0
     while i < len( jsonBoundary['coords']):
-      p.addContour( jsonBoundary['coords'][i], 1 )
+      p.addContour( jsonBoundary['coords'][i], jsonBoundary['contours'][i] )
       i = i + 1
      
     ridingBoundaries.append( p )
@@ -32,6 +32,74 @@ def loadBoundaries( path ) :
 def distanceBetweenPoints( point1, point2 ):
 
   return math.sqrt( ( point1[0] - point2[0] ) ** 2 + ( point1[1] - point2[1] ) ** 2 )
+  
+  
+def pointInBox( x, y, box ):
+
+  # Box is tuple of four floats: xmin, xmax, ymin, ymax
+  
+  if ( x > box[0] ) and ( x < box[1] ) and ( y > box[2] ) and ( y < box[3] ) :
+    return True
+  else :
+    return False
+
+
+def boundingBoxOverlap( poly1, poly2 ):
+
+  # Checks to see if the bounding boxes of the two polygons overlap in any way.
+  
+  overlap = False
+  
+  box1 = poly1.boundingBox()
+  box2 = poly2.boundingBox()
+  
+  # Bounding box returns tuple of four floats: xmin, xmax, ymin, ymax
+
+  # Check top left
+    
+  if( pointInBox( box2[0], box2[2], box1 )):
+    return True
+    
+  # Check top right
+  
+  if( pointInBox( box2[1], box2[2], box1 )):
+    return True
+
+  # Check bottom left
+  
+  if( pointInBox( box2[0], box2[3], box1 )):
+    return True
+
+  # Check bottom right
+  
+  if( pointInBox( box2[1], box2[3], box1 )):
+    return True
+    
+  # Finally, check if box1 is entirely contained within box2.  For this, we just need to check one point
+  
+  # Check top left
+    
+  if( pointInBox( box1[0], box1[2], box2 )):
+    return True
+    
+  # Check top right
+  
+  if( pointInBox( box1[1], box1[2], box2 )):
+    return True
+
+  # Check bottom left
+  
+  if( pointInBox( box1[0], box1[3], box2 )):
+    return True
+
+  # Check bottom right
+  
+  if( pointInBox( box1[1], box1[3], box2 )):
+    return True
+  
+  # Otherwise, we return False
+  
+  return False
   
   
 def calculateDistanceMatrix( ridingBoundaries ):
@@ -73,9 +141,16 @@ def nSolidContours( polygon ):
 
   
 def arePolysAdjacent( poly1, poly2 ):
-  # Here, we test if two polygons are adjacent by performing a union on them and seeing if extra contours are created
   
+  # First, we check if bounding boxes overlap. If not, it's trivial and we return false.    
+  
+  if not boundingBoxOverlap( poly1, poly2 ):
+    return False
+  
+  # Here, we test if two polygons are adjacent by performing a union on them and seeing if extra contours are created
+   
   p = poly1 + poly2
+  
   
   if nSolidContours( p ) < nSolidContours( poly1 ) + nSolidContours( poly2 ):
     return True
@@ -86,46 +161,45 @@ def arePolysAdjacent( poly1, poly2 ):
       
 
 
-def buildAdjacencyMatrix( path ):
+def buildAdjacencyList( path ):
 
-  ridingBoundaries = loadBoundaries( path )
+  ridingBoundaries = loadBoundaries( path )     
   
-  distanceMatrix = calculateDistanceMatrix( ridingBoundaries )
+  adjacencyMatrix = []
   
-  print "TS & TD: ", arePolysAdjacent( ridingBoundaries[95], ridingBoundaries[93] )
-  
-  print "TS & Sudbury: ", arePolysAdjacent( ridingBoundaries[95], ridingBoundaries[87] )
-  
-  adjacencyMatrix = {}
+  for i in range( 0, 107 ):
+ 
+    adjacencyMatrix.append( [] )
+    
+    adjacencyMatrix[i] = [0] * 107          # Initially fill matrix with zeros
+
+    sys.stdout.write( "Riding: " + str(i + 1) + " --> ")
+        
+    
+    for j in range( 0, 107 ):
+      if j < i:
+        adjacencyMatrix[i][j] = adjacencyMatrix[j][i]    # MATRIX IS SYMETRIC
+        if adjacencyMatrix[i][j] == 1:
+          sys.stdout.write( str( j+1 ) + ", ")
+      elif not i == j:
+        if arePolysAdjacent( ridingBoundaries[i], ridingBoundaries[j] ) :
+          adjacencyMatrix[i][j] = 1
+          sys.stdout.write( str(j+1) + ", " )
+    
+    sys.stdout.write( "\n" )
+    
+  adjacencyList = {}
   
   for i in range( 0, 107 ):
   
-    misses = 20
-    j = 1                                    # Start at [1] because [0] is the same polygon
-
-    adjacencyMatrix.update( { i+1 : [] } )
-    
-    #adjacencyMatrix[i] = [0] * 107          # Initially fill matrix with zeros
-    
-    print i 
-    
-    while misses > 0:
-      if arePolysAdjacent( ridingBoundaries[i], ridingBoundaries[distanceMatrix[i][j]] ) :
-        adjacencyMatrix[i+1].append( distanceMatrix[i][j] + 1 )
-        print "**"
-      else:
-        misses -= 1
-        #print distanceMatrix[i][j] + 1
-    
-      
-      j += 1
-    
-       
+    adjacencyList.update( { i + 1 : [] } )
   
-  print adjacencyMatrix
+    for j in range( 0, 107 ):
+      if adjacencyMatrix[i][j] == 1 :
+        adjacencyList[i+1].append( j + 1 )
   
-  with open("test.json", 'w') as f:
-    json.dump(adjacencyMatrix, f)
+  with open( path + "adjacencyList.json", 'w') as f:
+    json.dump(adjacencyList, f)
     f.close()
      
     
@@ -149,4 +223,4 @@ dataPath = "data/Ont2011/"
 
 path = rootPath + dataPath
 
-buildAdjacencyMatrix( path )
+buildAdjacencyList( path )

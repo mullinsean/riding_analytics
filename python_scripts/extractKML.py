@@ -34,14 +34,19 @@ def parsePolygon( pol, element ):
 
   if 'coords' not in pol:
     pol.update({ 'coords' : [] })
+    
+  if 'contours' not in pol:
+    pol.update({ 'contours' : [] })
  
   for e in element.iter( "{http://www.opengis.net/kml/2.2}outerBoundaryIs", "{http://www.opengis.net/kml/2.2}innerBoundaryIs" ):
     if e.tag == "{http://www.opengis.net/kml/2.2}outerBoundaryIs":
       for ee in e.iter("{http://www.opengis.net/kml/2.2}coordinates"):
         pol['coords'].append( split_coords(ee.text) )
+        pol['contours'].append( 0 )                                             # 0 for a solid contour, 1 for a hole.
     if e.tag == "{http://www.opengis.net/kml/2.2}innerBoundaryIs":
       for ee in e.iter("{http://www.opengis.net/kml/2.2}coordinates"):
         pol['coords'].append( split_coords(ee.text) )
+        pol['contours'].append( 1 )                                             # 0 for a solid contour, 1 for a hole.
 
   return pol
   
@@ -74,14 +79,14 @@ def calculateRidingBoundary( polls ) :
     for poll in polls:
       pollPoly = Polygon.Polygon( poll['coords'][0] )
       for i in range( 1, len( poll['coords'] )):
-        pollPoly.addContour( poll['coords'][i], 1 )
+        pollPoly.addContour( poll['coords'][i], poll['contours'][i] )
       pollPoly = Polygon.Utils.fillHoles( pollPoly )
       boundaryPoly = boundaryPoly + pollPoly         # Use built in UNION function ("+") to add poll boundaries together
       sys.stdout.write("+")
       
     print ""
     
-    boundaryList = []
+    boundary = { "coords" : [], "contours" : [] }
     
     for i in range( 0, len(boundaryPoly)) :
       contourList = []
@@ -89,14 +94,12 @@ def calculateRidingBoundary( polls ) :
       if not boundaryPoly.isHole(i) or boundaryPoly.area(i) > 0.0001:     # THIS IS A HACK TO PREVENT SMALL HOLES FROM APPEARING IN THE RIDING POLYGONS
         for point in boundaryPoly[i]:
           contourList.append( [point[0],point[1]] )
-        boundaryList.append( contourList )
+        boundary['coords'].append( contourList )
+        boundary['contours'].append( boundaryPoly.isHole(i) )
         
-    print "Number of layers:", len( boundaryList )
-       
-    boundary = { "coords" : [] }
-    boundary['coords'] = boundaryList
+    print "Number of layers:", len( boundary['coords'] )
 
-    return boundaryList
+    return boundary
 
 
 
@@ -147,8 +150,8 @@ def extractKML( ridingID, path ) :
     outputFile = path + 'ridingMapBoundaryData_' + str( ridingID ) + '.json'
     
     boundary = {}
+    boundary = calculateRidingBoundary( poll_list )
     boundary['ridingID'] = ridingID
-    boundary['coords'] = calculateRidingBoundary( poll_list )
     
     with open(outputFile, 'w') as f:
       json.dump(boundary, f)
@@ -171,7 +174,7 @@ dataPath = "data/Ont2011/"
 path = rootPath + dataPath
 
 #for i in range( 1, 108 ) :    
-extractKML( 58, path  )
+extractKML( 56, path  )
 
 	  
 
