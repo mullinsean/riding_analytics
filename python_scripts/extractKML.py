@@ -174,7 +174,7 @@ dataPath = "data/Ont2011/"
 path = rootPath + dataPath
 
 #for i in range( 1, 108 ) :    
-extractKML( 56, path  )
+extractKML( 13, path  )
 
 	  
 

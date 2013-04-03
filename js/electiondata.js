@@ -409,6 +409,31 @@
     }
     return this;
   };
+  
+  ElectionData.Riding.prototype.setDisplayOptions = function( displayOptions ) {
+  
+    if( displayOptions.hasOwnProperty( "strokeColor" )) {
+	  this.polyOpts.strokeColor = displayOptions.strokeColor;
+	}
+    if( displayOptions.hasOwnProperty( "strokeOpacity" )) {
+	  this.polyOpts.strokeOpacity = displayOptions.strokeOpacity;
+	}	 
+    if( displayOptions.hasOwnProperty( "strokeWeight" )) {
+	  this.polyOpts.strokeWeight = displayOptions.strokeWeight;
+	}  
+    if( displayOptions.hasOwnProperty( "fillColor" )) {
+	  this.polyOpts.fillColor = displayOptions.fillColor;
+	}  
+    if( displayOptions.hasOwnProperty( "fillOpacity" )) {
+	  this.polyOpts.fillOpacity = displayOptions.fillOpacity;
+	}   
+	 
+	if( this.gPoly != null ) {
+	  this.gPoly.setOptions( this.polyOpts );
+	}
+	 
+    return this;
+  }; 
 
   
   ElectionData.Riding.prototype.showPolls = function() {

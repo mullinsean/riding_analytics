@@ -4,8 +4,7 @@ from operator import itemgetter
 import json
 from pprint import pprint
 import sys
-import Polygon
-import Polygon.Utils
+
 
 def splitCoords( coords ):
   c = []
