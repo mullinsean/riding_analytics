@@ -59,24 +59,65 @@ def checkInPollMapping( ridingID, pollID, pollMappingList ):
     return False
     
   return True
+  
+def sumPoll( poll ):
+  
+  total = 0
+  
+  pollVotes = {}
+  addVotes( poll, pollVotes )
+  
+  for i in pollVotes.keys():
+    total += pollVotes[i]
 
+  return total
 
 def calculateRedistributedResults( pollResults, pollMappingList ):
 
-  redistributedResults = {}
+  redistributedResults = {} 
   
   for i in range( 1, 122 ):
     redistributedResults.update( { i : {} } )
     
+  ridingAllocations = {}
+  advanceVotes = {}
+  totalAdvanceVotes = {}
+  
   for i in range( 1, 108 ):   
+  
+    ridingAllocations.update( { i : {} })
+    advanceVotes.update( { i : {} } )
+    totalAdvanceVotes.update( { i : 0 } )
   
     print "Riding", i
   
     for j in pollResults[i].keys():
-      if not j[:3] == "ADV" and checkInPollMapping( i, j, pollMappingList ):
+      if checkInPollMapping( i, j, pollMappingList ):
         addVotes( pollResults[i][j], redistributedResults[pollMappingList[str(i)][str(j)]] )
+        if pollMappingList[str(i)][str(j)] not in ridingAllocations[i] :
+          ridingAllocations[i].update( { pollMappingList[str(i)][str(j)] : 0 } )
+        ridingAllocations[i][pollMappingList[str(i)][str(j)]] += sumPoll( pollResults[i][j] )
+      elif j[:3] == "ADV" :
+        addVotes( pollResults[i][j], advanceVotes[i] )
+
+    for j in advanceVotes[i].keys() :
+      totalAdvanceVotes[i] += advanceVotes[i][j]
       
+  # Now, calculate % of votes to each redistributed riding and allocate share of advance votes accordingly
+  
+  for i in range( 1, 108 ):
+    totalVotes = 0
+    
+    for j in ridingAllocations[i].keys():
+      totalVotes += ridingAllocations[i][j]
       
+    for j in ridingAllocations[i].keys():
+      ridingAllocations[i][j] = float( ridingAllocations[i][j] ) / float ( totalVotes )
+      
+      for party in redistributedResults[j].keys():
+        if party in advanceVotes[i]:
+          redistributedResults[j][party] += int( float( advanceVotes[i][party] ) * ridingAllocations[i][j] )
+        
   return redistributedResults
   
 def outputResults( path, redistributedResults ):
@@ -103,12 +144,8 @@ def outputResults( path, redistributedResults ):
     outputList.append( tempDict.copy())
     for j in redistributedResults[i].keys():
       headings.add( j )
-  
-  print headings
-  
+    
   fieldnames = headings
-  
-  print fieldnames
   
   test_file = open('test2.csv','wb')
   
@@ -120,14 +157,13 @@ def outputResults( path, redistributedResults ):
     csvwriter.writerow(row)
   test_file.close()
   
-  print outputList
 
 
 # TO FIX:
 
   # - Poll being mapped to riding 0 (eg: Riding 30, Poll 290 --> 0 )
   # - Polls with maps but no results (eg: Riding 25, Poll 706 )
-  # - How to apportion advanced poll results  
+  # - How to apportion advanced poll results  (DONE)
   
  
 
