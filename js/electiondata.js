@@ -314,7 +314,9 @@
     strokeOpacity: 0.8,
     strokeWeight: 2,
     fillColor: "#5F7F5F",
-    fillOpacity: 0.6
+    fillOpacity: 0.0,
+    zIndex: 10,
+    clickable: false,
    }; 
    
    this.ridingCoords = boundaryData.coords;

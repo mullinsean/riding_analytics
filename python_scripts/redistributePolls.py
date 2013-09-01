@@ -141,7 +141,7 @@ def assignPollsToRiding( path, mappingList, ridingBoundaries, pollList ):
     
     
 rootPath = "/Mullin Files/Code/riding_analytics/"
-dataPath = "data/Ont2011/"
+dataPath = "data/Ont2013/"
 
 path = rootPath + dataPath
 
@@ -151,7 +151,7 @@ ridingMappingList = loadRidingMatrix( path )
 
 print "Loading riding boundaries..."
 
-ridingBoundaries = loadBoundaries( path + "redistribution/", 121 )
+ridingBoundaries = loadBoundaries( path, 121 )
 
 
 print "Loading poll boundaries and converting to polygons..."
@@ -159,7 +159,7 @@ print "Loading poll boundaries and converting to polygons..."
 pollLists = {}
 
 for i in range( 1, 108 ):  
-  pollLists.update( { i : loadPollBoundaries( path, i ) } )
+  pollLists.update( { i : loadPollBoundaries( rootPath + "data/Ont2011/", i ) } )
 
 print "Allocating polls to ridings..."
 
